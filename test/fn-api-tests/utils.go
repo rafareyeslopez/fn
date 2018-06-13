@@ -20,7 +20,7 @@ import (
 
 const lBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
-func GetAPIURL() (string, *url.URL) {
+func getAPIURL() (string, *url.URL) {
 	apiURL := getEnv("FN_API_URL", "http://localhost:8080")
 	u, err := url.Parse(apiURL)
 	if err != nil {
@@ -29,13 +29,13 @@ func GetAPIURL() (string, *url.URL) {
 	return apiURL, u
 }
 
-func Host() string {
-	_, u := GetAPIURL()
+func host() string {
+	_, u := getAPIURL()
 	return u.Host
 }
 
-func APIClient() *client.Fn {
-	transport := httptransport.New(Host(), "/v1", []string{"http"})
+func apiClient() *client.Fn {
+	transport := httptransport.New(host(), "/v1", []string{"http"})
 	if os.Getenv("FN_TOKEN") != "" {
 		transport.DefaultAuthentication = httptransport.BearerToken(os.Getenv("FN_TOKEN"))
 	}
@@ -50,7 +50,7 @@ func checkServer(ctx context.Context) error {
 		return ctx.Err()
 	}
 
-	apiURL, _ := GetAPIURL()
+	apiURL, _ := getAPIURL()
 
 	client := &http.Client{}
 	req, err := http.NewRequest("GET", apiURL+"/version", nil)
@@ -74,9 +74,11 @@ func getEnv(key, fallback string) string {
 	return fallback
 }
 
-// TestHarness provides context and pre-configured clients to an individual test, it has some helper functions to create Apps and Routes that mirror the underlying client operations and clean them up after the test is complete
+// testHarness provides context and pre-configured clients to an individual
+// test, it has some helper functions to create Apps and Routes that mirror the
+// underlying client operations and clean them up after the test is complete
 // This is not goroutine safe and each test case should use its own harness.
-type TestHarness struct {
+type testHarness struct {
 	Context      context.Context
 	Cancel       func()
 	Client       *client.Fn
@@ -94,7 +96,7 @@ type TestHarness struct {
 	createdApps map[string]bool
 }
 
-func RandStringBytes(n int) string {
+func randStringBytes(n int) string {
 	b := make([]byte, n)
 	for i := range b {
 		b[i] = lBytes[rand.Intn(len(lBytes))]
@@ -102,16 +104,16 @@ func RandStringBytes(n int) string {
 	return strings.ToLower(string(b))
 }
 
-// SetupHarness creates a test harness for a test case - this picks up external options and
-func SetupHarness() *TestHarness {
+// setupHarness creates a test harness for a test case - this picks up external options and
+func setupHarness() *testHarness {
 	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 
-	ss := &TestHarness{
+	ss := &testHarness{
 		Context:      ctx,
 		Cancel:       cancel,
-		Client:       APIClient(),
-		AppName:      "fnintegrationtestapp" + RandStringBytes(10),
-		RoutePath:    "/fnintegrationtestroute" + RandStringBytes(10),
+		Client:       apiClient(),
+		AppName:      "fnintegrationtestapp" + randStringBytes(10),
+		RoutePath:    "/fnintegrationtestroute" + randStringBytes(10),
 		Image:        "fnproject/hello",
 		Format:       "default",
 		RouteType:    "async",
@@ -125,7 +127,7 @@ func SetupHarness() *TestHarness {
 	return ss
 }
 
-func (s *TestHarness) Cleanup() {
+func (s *testHarness) Cleanup() {
 	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 	defer cancel()
 
@@ -133,14 +135,14 @@ func (s *TestHarness) Cleanup() {
 	//	deleteRoute(ctx, s.Client, ar.appName, ar.routeName)
 	//}
 
-	for app, _ := range s.createdApps {
+	for app := range s.createdApps {
 		safeDeleteApp(ctx, s.Client, app)
 	}
 
 	s.Cancel()
 }
 
-func EnvAsHeader(req *http.Request, selectedEnv []string) {
+func envAsHeader(req *http.Request, selectedEnv []string) {
 	detectedEnv := os.Environ()
 	if len(selectedEnv) > 0 {
 		detectedEnv = selectedEnv
@@ -153,7 +155,7 @@ func EnvAsHeader(req *http.Request, selectedEnv []string) {
 	}
 }
 
-func CallFN(ctx context.Context, u string, content io.Reader, output io.Writer, method string, env []string) (*http.Response, error) {
+func callFN(ctx context.Context, u string, content io.Reader, output io.Writer, method string, env []string) (*http.Response, error) {
 	if method == "" {
 		if content == nil {
 			method = "GET"
@@ -170,7 +172,7 @@ func CallFN(ctx context.Context, u string, content io.Reader, output io.Writer, 
 	req = req.WithContext(ctx)
 
 	if len(env) > 0 {
-		EnvAsHeader(req, env)
+		envAsHeader(req, env)
 	}
 
 	resp, err := http.DefaultClient.Do(req)
@@ -187,7 +189,7 @@ func init() {
 	rand.Seed(time.Now().UnixNano())
 }
 
-func APICallWithRetry(t *testing.T, attempts int, sleep time.Duration, callback func() error) (err error) {
+func apiCallWithRetry(t *testing.T, attempts int, sleep time.Duration, callback func() error) (err error) {
 	for i := 0; i < attempts; i++ {
 		err = callback()
 		if err == nil {

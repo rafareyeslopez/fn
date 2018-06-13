@@ -13,7 +13,7 @@ import (
 
 func TestShouldRejectEmptyRouteType(t *testing.T) {
 	t.Parallel()
-	s := SetupHarness()
+	s := setupHarness()
 	defer s.Cleanup()
 
 	s.GivenAppExists(t, &models.App{Name: s.AppName})
@@ -32,7 +32,7 @@ func TestShouldRejectEmptyRouteType(t *testing.T) {
 
 func TestCanCreateRoute(t *testing.T) {
 	t.Parallel()
-	s := SetupHarness()
+	s := setupHarness()
 	defer s.Cleanup()
 
 	s.GivenAppExists(t, &models.App{Name: s.AppName})
@@ -50,7 +50,7 @@ func TestCanCreateRoute(t *testing.T) {
 
 func TestListRoutes(t *testing.T) {
 	t.Parallel()
-	s := SetupHarness()
+	s := setupHarness()
 	defer s.Cleanup()
 
 	s.GivenAppExists(t, &models.App{Name: s.AppName})
@@ -73,7 +73,7 @@ func TestListRoutes(t *testing.T) {
 
 func TestInspectRoute(t *testing.T) {
 	t.Parallel()
-	s := SetupHarness()
+	s := setupHarness()
 	defer s.Cleanup()
 
 	s.GivenAppExists(t, &models.App{Name: s.AppName})
@@ -92,7 +92,7 @@ func TestInspectRoute(t *testing.T) {
 
 	gotRt := resp.Payload.Route
 
-	AssertRouteMatches(t, newRt, gotRt)
+	assertRouteMatches(t, newRt, gotRt)
 
 }
 
@@ -115,7 +115,7 @@ func TestCanUpdateRouteAttributes(t *testing.T) {
 		tc := tci
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
-			s := SetupHarness()
+			s := setupHarness()
 			defer s.Cleanup()
 
 			s.GivenAppExists(t, &models.App{Name: s.AppName})
@@ -151,7 +151,7 @@ func TestRoutePatchConfig(t *testing.T) {
 		tc := tci
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
-			s := SetupHarness()
+			s := setupHarness()
 			defer s.Cleanup()
 			s.GivenAppExists(t, &models.App{Name: s.AppName})
 			route := s.BasicRoute()
@@ -192,7 +192,7 @@ func TestSetRouteAnnotationsOnCreate(t *testing.T) {
 		tc := tci
 		t.Run("valid_"+tc.name, func(t *testing.T) {
 			t.Parallel()
-			s := SetupHarness()
+			s := setupHarness()
 			defer s.Cleanup()
 
 			s.GivenAppExists(t, &models.App{
@@ -232,7 +232,7 @@ func TestSetRouteAnnotationsOnCreate(t *testing.T) {
 		tc := tci
 		t.Run("invalid_"+tc.name, func(ti *testing.T) {
 			ti.Parallel()
-			s := SetupHarness()
+			s := setupHarness()
 			defer s.Cleanup()
 
 			_, err := s.PostApp(&models.App{
@@ -260,7 +260,7 @@ func TestSetRouteMetadataOnPatch(t *testing.T) {
 		tc := tci
 		t.Run("valid_"+tc.name, func(t *testing.T) {
 			t.Parallel()
-			s := SetupHarness()
+			s := setupHarness()
 			defer s.Cleanup()
 
 			s.GivenAppExists(t, &models.App{Name: s.AppName})
@@ -301,7 +301,7 @@ func TestSetRouteMetadataOnPatch(t *testing.T) {
 		tc := tci
 		t.Run("invalid_"+tc.name, func(t *testing.T) {
 			t.Parallel()
-			s := SetupHarness()
+			s := setupHarness()
 			defer s.Cleanup()
 
 			s.GivenAppExists(t, &models.App{
@@ -336,7 +336,7 @@ func TestSetRouteMetadataOnPatch(t *testing.T) {
 func TestCantUpdateRoutePath(t *testing.T) {
 
 	t.Parallel()
-	s := SetupHarness()
+	s := setupHarness()
 	defer s.Cleanup()
 
 	s.GivenAppExists(t, &models.App{Name: s.AppName})
@@ -363,7 +363,7 @@ func TestCantUpdateRoutePath(t *testing.T) {
 
 func TestRoutePreventsDuplicate(t *testing.T) {
 	t.Parallel()
-	s := SetupHarness()
+	s := setupHarness()
 	defer s.Cleanup()
 
 	s.GivenAppExists(t, &models.App{Name: s.AppName})
@@ -381,7 +381,7 @@ func TestRoutePreventsDuplicate(t *testing.T) {
 
 func TestCanDeleteRoute(t *testing.T) {
 	t.Parallel()
-	s := SetupHarness()
+	s := setupHarness()
 	defer s.Cleanup()
 
 	s.GivenAppExists(t, &models.App{Name: s.AppName})
@@ -400,7 +400,7 @@ func TestCanDeleteRoute(t *testing.T) {
 
 func TestCantDeleteMissingRoute(t *testing.T) {
 	t.Parallel()
-	s := SetupHarness()
+	s := setupHarness()
 	defer s.Cleanup()
 
 	s.GivenAppExists(t, &models.App{Name: s.AppName})
@@ -423,7 +423,7 @@ func TestCantDeleteMissingRoute(t *testing.T) {
 
 func TestPutRouteCreatesNewApp(t *testing.T) {
 	t.Parallel()
-	s := SetupHarness()
+	s := setupHarness()
 	defer s.Cleanup()
 
 	_, err := s.PutRoute(s.AppName, s.RoutePath, s.BasicRoute())
@@ -438,7 +438,7 @@ func TestPutRouteCreatesNewApp(t *testing.T) {
 }
 
 func TestPutRouteToExistingApp(t *testing.T) {
-	s := SetupHarness()
+	s := setupHarness()
 	defer s.Cleanup()
 
 	s.GivenAppExists(t, &models.App{Name: s.AppName})
@@ -452,7 +452,7 @@ func TestPutRouteToExistingApp(t *testing.T) {
 
 func TestPutRouteUpdatesRoute(t *testing.T) {
 	newRouteType := "sync"
-	s := SetupHarness()
+	s := setupHarness()
 	defer s.Cleanup()
 
 	s.GivenAppExists(t, &models.App{Name: s.AppName})
@@ -473,7 +473,7 @@ func TestPutRouteUpdatesRoute(t *testing.T) {
 }
 
 func TestPutIsIdempotentForHeaders(t *testing.T) {
-	s := SetupHarness()
+	s := setupHarness()
 	defer s.Cleanup()
 
 	s.GivenAppExists(t, &models.App{Name: s.AppName})

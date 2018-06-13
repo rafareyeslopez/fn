@@ -13,7 +13,7 @@ import (
 
 func TestCallsMissingApp(t *testing.T) {
 	t.Parallel()
-	s := SetupHarness()
+	s := setupHarness()
 	cfg := &call.GetAppsAppCallsParams{
 		App:     s.AppName,
 		Path:    &s.RoutePath,
@@ -27,7 +27,7 @@ func TestCallsMissingApp(t *testing.T) {
 
 func TestCallsDummy(t *testing.T) {
 	t.Parallel()
-	s := SetupHarness()
+	s := setupHarness()
 	defer s.Cleanup()
 
 	s.GivenAppExists(t, &models.App{Name: s.AppName})
@@ -48,7 +48,7 @@ func TestCallsDummy(t *testing.T) {
 
 func TestGetExactCall(t *testing.T) {
 	t.Parallel()
-	s := SetupHarness()
+	s := setupHarness()
 	defer s.Cleanup()
 
 	s.GivenAppExists(t, &models.App{Name: s.AppName})
@@ -56,11 +56,11 @@ func TestGetExactCall(t *testing.T) {
 
 	u := url.URL{
 		Scheme: "http",
-		Host:   Host(),
+		Host:   host(),
 	}
 	u.Path = path.Join(u.Path, "r", s.AppName, s.RoutePath)
 
-	callID := CallAsync(t, s.Context, u, &bytes.Buffer{})
+	callID := callAsync(s.Context, t, u, &bytes.Buffer{})
 
 	cfg := &call.GetAppsAppCallsCallParams{
 		Call:    callID,
@@ -69,7 +69,7 @@ func TestGetExactCall(t *testing.T) {
 	}
 	cfg.WithTimeout(time.Second * 60)
 
-	retryErr := APICallWithRetry(t, 10, time.Second*2, func() (err error) {
+	retryErr := apiCallWithRetry(t, 10, time.Second*2, func() (err error) {
 		_, err = s.Client.Call.GetAppsAppCallsCall(cfg)
 		return err
 	})

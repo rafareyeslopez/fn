@@ -10,11 +10,11 @@ import (
 	"strconv"
 )
 
-type Person struct {
+type person struct {
 	Name string `json:"name"`
 }
 
-type JSON struct {
+type jason struct {
 	Headers    http.Header `json:"headers"`
 	Body       string      `json:"body,omitempty"`
 	StatusCode int         `json:"status,omitempty"`
@@ -26,26 +26,26 @@ func main() {
 	stdout := json.NewEncoder(os.Stdout)
 	stderr := json.NewEncoder(os.Stderr)
 	for {
-		in := &JSON{}
+		in := &jason{}
 
 		err := stdin.Decode(in)
 		if err != nil {
 			log.Fatalf("Unable to decode incoming data: %s", err.Error())
 			fmt.Fprintf(os.Stderr, err.Error())
 		}
-		person := Person{}
+		p := person{}
 		stderr.Encode(in.Body)
 		if len(in.Body) != 0 {
-			if err := json.NewDecoder(bytes.NewReader([]byte(in.Body))).Decode(&person); err != nil {
+			if err := json.NewDecoder(bytes.NewReader([]byte(in.Body))).Decode(&p); err != nil {
 				log.Fatalf("Unable to decode Person object data: %s", err.Error())
 				fmt.Fprintf(os.Stderr, err.Error())
 			}
 		}
-		if person.Name == "" {
-			person.Name = "World"
+		if p.Name == "" {
+			p.Name = "World"
 		}
 
-		mapResult := map[string]string{"message": fmt.Sprintf("Hello %s", person.Name)}
+		mapResult := map[string]string{"message": fmt.Sprintf("Hello %s", p.Name)}
 		b, err := json.Marshal(mapResult)
 		if err != nil {
 			log.Fatalf("Unable to marshal JSON response body: %s", err.Error())
@@ -54,7 +54,7 @@ func main() {
 		h := http.Header{}
 		h.Set("Content-Type", "application/json")
 		h.Set("Content-Length", strconv.Itoa(len(b)))
-		out := &JSON{
+		out := &jason{
 			StatusCode: http.StatusOK,
 			Body:       string(b),
 			Headers:    h,

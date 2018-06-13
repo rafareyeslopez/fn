@@ -10,7 +10,7 @@ import (
 
 func TestAppDeleteNotFound(t *testing.T) {
 	t.Parallel()
-	s := SetupHarness()
+	s := setupHarness()
 	defer s.Cleanup()
 
 	cfg := &apps.DeleteAppsAppParams{
@@ -27,7 +27,7 @@ func TestAppDeleteNotFound(t *testing.T) {
 
 func TestAppGetNotFound(t *testing.T) {
 	t.Parallel()
-	s := SetupHarness()
+	s := setupHarness()
 	defer s.Cleanup()
 
 	cfg := &apps.GetAppsAppParams{
@@ -47,7 +47,7 @@ func TestAppGetNotFound(t *testing.T) {
 
 func TestAppCreateNoConfigSuccess(t *testing.T) {
 	t.Parallel()
-	s := SetupHarness()
+	s := setupHarness()
 	defer s.Cleanup()
 
 	resp, err := s.PostApp(&models.App{
@@ -72,7 +72,7 @@ func TestSetAppAnnotationsOnCreate(t *testing.T) {
 		tc := tci
 		t.Run("valid_"+tc.name, func(t *testing.T) {
 			t.Parallel()
-			s := SetupHarness()
+			s := setupHarness()
 			defer s.Cleanup()
 
 			app, err := s.PostApp(&models.App{
@@ -103,7 +103,7 @@ func TestSetAppAnnotationsOnCreate(t *testing.T) {
 		tc := tci
 		t.Run("invalid_"+tc.name, func(ti *testing.T) {
 			ti.Parallel()
-			s := SetupHarness()
+			s := setupHarness()
 			defer s.Cleanup()
 
 			_, err := s.PostApp(&models.App{
@@ -131,7 +131,7 @@ func TestUpdateAppAnnotationsOnPatch(t *testing.T) {
 		tc := tci
 		t.Run("valid_"+tc.name, func(t *testing.T) {
 			t.Parallel()
-			s := SetupHarness()
+			s := setupHarness()
 			defer s.Cleanup()
 
 			s.GivenAppExists(t, &models.App{
@@ -171,7 +171,7 @@ func TestUpdateAppAnnotationsOnPatch(t *testing.T) {
 		tc := tci
 		t.Run("invalid_"+tc.name, func(t *testing.T) {
 			t.Parallel()
-			s := SetupHarness()
+			s := setupHarness()
 			defer s.Cleanup()
 
 			s.GivenAppExists(t, &models.App{
@@ -202,7 +202,7 @@ func TestUpdateAppAnnotationsOnPatch(t *testing.T) {
 
 func TestAppCreateWithConfigSuccess(t *testing.T) {
 	t.Parallel()
-	s := SetupHarness()
+	s := setupHarness()
 	defer s.Cleanup()
 
 	validConfig := map[string]string{"A": "a"}
@@ -223,7 +223,7 @@ func TestAppCreateWithConfigSuccess(t *testing.T) {
 
 func TestAppInsect(t *testing.T) {
 	t.Parallel()
-	s := SetupHarness()
+	s := setupHarness()
 	defer s.Cleanup()
 
 	validConfig := map[string]string{"A": "a"}
@@ -253,7 +253,7 @@ func TestAppPatchConfig(t *testing.T) {
 		tc := tci
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
-			s := SetupHarness()
+			s := setupHarness()
 			defer s.Cleanup()
 
 			s.GivenAppExists(t, &models.App{
@@ -286,7 +286,7 @@ func TestAppPatchConfig(t *testing.T) {
 
 func TestAppDuplicate(t *testing.T) {
 	t.Parallel()
-	s := SetupHarness()
+	s := setupHarness()
 	defer s.Cleanup()
 
 	s.GivenAppExists(t, &models.App{Name: s.AppName})

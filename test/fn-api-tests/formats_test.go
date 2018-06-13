@@ -17,7 +17,7 @@ type JSONResponse struct {
 
 func TestFnJSONFormats(t *testing.T) {
 	t.Parallel()
-	s := SetupHarness()
+	s := setupHarness()
 	defer s.Cleanup()
 
 	// TODO(treeder): put image in fnproject @ dockerhub
@@ -30,7 +30,7 @@ func TestFnJSONFormats(t *testing.T) {
 
 	u := url.URL{
 		Scheme: "http",
-		Host:   Host(),
+		Host:   host(),
 	}
 	u.Path = path.Join(u.Path, "r", s.AppName, s.RoutePath)
 
@@ -41,7 +41,7 @@ func TestFnJSONFormats(t *testing.T) {
 	})
 	content := bytes.NewBuffer(b)
 	output := &bytes.Buffer{}
-	resp, err := CallFN(s.Context, u.String(), content, output, "POST", []string{})
+	resp, err := callFN(s.Context, u.String(), content, output, "POST", []string{})
 	if err != nil {
 		t.Errorf("Got unexpected error: %v", err)
 	}

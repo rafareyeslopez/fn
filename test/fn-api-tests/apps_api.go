@@ -13,7 +13,7 @@ import (
 )
 
 // PostApp creates an app and esures it is deleted on teardown  if it was created
-func (s *TestHarness) PostApp(app *models.App) (*apps.PostAppsOK, error) {
+func (s *testHarness) PostApp(app *models.App) (*apps.PostAppsOK, error) {
 	cfg := &apps.PostAppsParams{
 		Body: &models.AppWrapper{
 			App: app,
@@ -29,7 +29,7 @@ func (s *TestHarness) PostApp(app *models.App) (*apps.PostAppsOK, error) {
 }
 
 // GivenAppExists creates an app and ensures it is deleted on teardown, this fatals if the app is not created
-func (s *TestHarness) GivenAppExists(t *testing.T, app *models.App) {
+func (s *testHarness) GivenAppExists(t *testing.T, app *models.App) {
 
 	appPayload, err := s.PostApp(app)
 	if err != nil {
@@ -43,7 +43,7 @@ func (s *TestHarness) GivenAppExists(t *testing.T, app *models.App) {
 }
 
 // AppMustExist fails the test if the specified app does not exist
-func (s *TestHarness) AppMustExist(t *testing.T, appName string) *models.App {
+func (s *testHarness) AppMustExist(t *testing.T, appName string) *models.App {
 	app, err := s.Client.Apps.GetAppsApp(&apps.GetAppsAppParams{
 		App:     s.AppName,
 		Context: s.Context,

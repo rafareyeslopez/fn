@@ -7,7 +7,7 @@ import (
 	"github.com/fnproject/fn_go/models"
 )
 
-func AssertRouteMatches(t *testing.T, expected *models.Route, got *models.Route) {
+func assertRouteMatches(t *testing.T, expected *models.Route, got *models.Route) {
 
 	if expected.Path != got.Path {
 		t.Errorf("Route path mismatch. Expected: %v. Actual: %v", expected.Path, got.Path)
@@ -25,7 +25,7 @@ func AssertRouteMatches(t *testing.T, expected *models.Route, got *models.Route)
 }
 
 // PostRoute Creates a route and deletes the corresponding app (if created) on teardown
-func (s *TestHarness) PostRoute(appName string, route *models.Route) (*routes.PostAppsAppRoutesOK, error) {
+func (s *testHarness) PostRoute(appName string, route *models.Route) (*routes.PostAppsAppRoutesOK, error) {
 	cfg := &routes.PostAppsAppRoutesParams{
 		App: appName,
 		Body: &models.RouteWrapper{
@@ -42,7 +42,7 @@ func (s *TestHarness) PostRoute(appName string, route *models.Route) (*routes.Po
 
 }
 
-func (s *TestHarness) BasicRoute() *models.Route {
+func (s *testHarness) BasicRoute() *models.Route {
 	return &models.Route{
 		Format:      s.Format,
 		Path:        s.RoutePath,
@@ -54,7 +54,7 @@ func (s *TestHarness) BasicRoute() *models.Route {
 }
 
 //GivenRouteExists creates a route using the specified arguments, failing the test if the creation fails, this tears down any apps that are created when the test is complete
-func (s *TestHarness) GivenRouteExists(t *testing.T, appName string, route *models.Route) {
+func (s *testHarness) GivenRouteExists(t *testing.T, appName string, route *models.Route) {
 	_, err := s.PostRoute(appName, route)
 	if err != nil {
 		t.Fatalf("Expected route to be created, got %v", err)
@@ -63,7 +63,7 @@ func (s *TestHarness) GivenRouteExists(t *testing.T, appName string, route *mode
 }
 
 //RouteMustExist checks that a route exists, failing the test if it doesn't, returns the route
-func (s *TestHarness) RouteMustExist(t *testing.T, appName string, routePath string) *models.Route {
+func (s *testHarness) RouteMustExist(t *testing.T, appName string, routePath string) *models.Route {
 	cfg := &routes.GetAppsAppRoutesRouteParams{
 		App:     appName,
 		Route:   routePath[1:],
@@ -78,7 +78,7 @@ func (s *TestHarness) RouteMustExist(t *testing.T, appName string, routePath str
 }
 
 //GivenRoutePatched applies a patch to a route, failing the test if this fails.
-func (s *TestHarness) GivenRoutePatched(t *testing.T, appName, routeName string, rt *models.Route) {
+func (s *testHarness) GivenRoutePatched(t *testing.T, appName, routeName string, rt *models.Route) {
 
 	_, err := s.Client.Routes.PatchAppsAppRoutesRoute(&routes.PatchAppsAppRoutesRouteParams{
 		App:     appName,
@@ -104,7 +104,7 @@ func assertContainsRoute(routeModels []*models.Route, expectedRoute string) bool
 }
 
 //PutRoute creates a route via PUT, tearing down any apps that are created when the test is complete
-func (s *TestHarness) PutRoute(appName string, routePath string, route *models.Route) (*routes.PutAppsAppRoutesRouteOK, error) {
+func (s *testHarness) PutRoute(appName string, routePath string, route *models.Route) (*routes.PutAppsAppRoutesRouteOK, error) {
 	cfg := &routes.PutAppsAppRoutesRouteParams{
 		App:     appName,
 		Context: s.Context,

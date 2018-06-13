@@ -55,7 +55,7 @@ type state struct {
 	cancel func()
 }
 
-func SetUpSystem() (*state, error) {
+func setUpSystem() (*state, error) {
 	ctx, cancel := context.WithCancel(context.Background())
 	state := &state{
 		cancel: cancel,
@@ -304,7 +304,7 @@ func whoAmI() net.IP {
 }
 
 func TestMain(m *testing.M) {
-	state, err := SetUpSystem()
+	state, err := setUpSystem()
 	if err != nil {
 		logrus.WithError(err).Fatal("Could not initialize system")
 		os.Exit(1)

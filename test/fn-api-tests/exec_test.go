@@ -16,9 +16,9 @@ import (
 	"github.com/fnproject/fn_go/models"
 )
 
-func CallAsync(t *testing.T, ctx context.Context, u url.URL, content io.Reader) string {
+func callAsync(ctx context.Context, t *testing.T, u url.URL, content io.Reader) string {
 	output := &bytes.Buffer{}
-	_, err := CallFN(ctx, u.String(), content, output, "POST", []string{})
+	_, err := callFN(ctx, u.String(), content, output, "POST", []string{})
 	if err != nil {
 		t.Errorf("Got unexpected error: %v", err)
 	}
@@ -42,25 +42,25 @@ func CallAsync(t *testing.T, ctx context.Context, u url.URL, content io.Reader) 
 	return callID.CallID
 }
 
-func CallSync(t *testing.T, ctx context.Context, u url.URL, content io.Reader) string {
+func callSync(ctx context.Context, t *testing.T, u url.URL, content io.Reader) string {
 	output := &bytes.Buffer{}
-	resp, err := CallFN(ctx, u.String(), content, output, "POST", []string{})
+	resp, err := callFN(ctx, u.String(), content, output, "POST", []string{})
 	if err != nil {
 		t.Errorf("Got unexpected error: %v", err)
 	}
 
-	callId := resp.Header.Get("FN_CALL_ID")
-	if callId == "" {
+	callID := resp.Header.Get("FN_CALL_ID")
+	if callID == "" {
 		t.Errorf("Assertion error.\n\tExpected call id header in response, got: %v", resp.Header)
 	}
 
-	t.Logf("Sync execution call ID: %v", callId)
-	return callId
+	t.Logf("Sync execution call ID: %v", callID)
+	return callID
 }
 
 func TestCanCallfunction(t *testing.T) {
 	t.Parallel()
-	s := SetupHarness()
+	s := setupHarness()
 	defer s.Cleanup()
 
 	s.GivenAppExists(t, &models.App{Name: s.AppName})
@@ -70,13 +70,13 @@ func TestCanCallfunction(t *testing.T) {
 
 	u := url.URL{
 		Scheme: "http",
-		Host:   Host(),
+		Host:   host(),
 	}
 	u.Path = path.Join(u.Path, "r", s.AppName, s.RoutePath)
 
 	content := &bytes.Buffer{}
 	output := &bytes.Buffer{}
-	_, err := CallFN(s.Context, u.String(), content, output, "POST", []string{})
+	_, err := callFN(s.Context, u.String(), content, output, "POST", []string{})
 	if err != nil {
 		t.Errorf("Got unexpected error: %v", err)
 	}
@@ -88,7 +88,7 @@ func TestCanCallfunction(t *testing.T) {
 
 func TestCallOutputMatch(t *testing.T) {
 	t.Parallel()
-	s := SetupHarness()
+	s := setupHarness()
 	s.GivenAppExists(t, &models.App{Name: s.AppName})
 	rt := s.BasicRoute()
 	rt.Type = "sync"
@@ -96,7 +96,7 @@ func TestCallOutputMatch(t *testing.T) {
 
 	u := url.URL{
 		Scheme: "http",
-		Host:   Host(),
+		Host:   host(),
 	}
 	u.Path = path.Join(u.Path, "r", s.AppName, s.RoutePath)
 
@@ -105,7 +105,7 @@ func TestCallOutputMatch(t *testing.T) {
 		Name string
 	}{Name: "John"})
 	output := &bytes.Buffer{}
-	_, err := CallFN(s.Context, u.String(), content, output, "POST", []string{})
+	_, err := callFN(s.Context, u.String(), content, output, "POST", []string{})
 	if err != nil {
 		t.Errorf("Got unexpected error: %v", err)
 	}
@@ -119,7 +119,7 @@ func TestCanCallAsync(t *testing.T) {
 	newRouteType := "async"
 	t.Parallel()
 
-	s := SetupHarness()
+	s := setupHarness()
 	s.GivenAppExists(t, &models.App{Name: s.AppName})
 	rt := s.BasicRoute()
 	rt.Type = "sync"
@@ -127,7 +127,7 @@ func TestCanCallAsync(t *testing.T) {
 
 	u := url.URL{
 		Scheme: "http",
-		Host:   Host(),
+		Host:   host(),
 	}
 	u.Path = path.Join(u.Path, "r", s.AppName, s.RoutePath)
 
@@ -135,13 +135,13 @@ func TestCanCallAsync(t *testing.T) {
 		Type: newRouteType,
 	})
 
-	CallAsync(t, s.Context, u, &bytes.Buffer{})
+	callAsync(s.Context, t, u, &bytes.Buffer{})
 }
 
 func TestCanGetAsyncState(t *testing.T) {
 	newRouteType := "async"
 	t.Parallel()
-	s := SetupHarness()
+	s := setupHarness()
 
 	s.GivenAppExists(t, &models.App{Name: s.AppName})
 	rt := s.BasicRoute()
@@ -150,7 +150,7 @@ func TestCanGetAsyncState(t *testing.T) {
 
 	u := url.URL{
 		Scheme: "http",
-		Host:   Host(),
+		Host:   host(),
 	}
 	u.Path = path.Join(u.Path, "r", s.AppName, s.RoutePath)
 
@@ -158,7 +158,7 @@ func TestCanGetAsyncState(t *testing.T) {
 		Type: newRouteType,
 	})
 
-	callID := CallAsync(t, s.Context, u, &bytes.Buffer{})
+	callID := callAsync(s.Context, t, u, &bytes.Buffer{})
 	cfg := &call.GetAppsAppCallsCallParams{
 		Call:    callID,
 		App:     s.AppName,
@@ -166,7 +166,7 @@ func TestCanGetAsyncState(t *testing.T) {
 	}
 	cfg.WithTimeout(time.Second * 60)
 
-	retryErr := APICallWithRetry(t, 10, time.Second*2, func() (err error) {
+	retryErr := apiCallWithRetry(t, 10, time.Second*2, func() (err error) {
 		_, err = s.Client.Call.GetAppsAppCallsCall(cfg)
 		return err
 	})
@@ -198,7 +198,7 @@ func TestCanGetAsyncState(t *testing.T) {
 
 func TestCanCauseTimeout(t *testing.T) {
 	t.Parallel()
-	s := SetupHarness()
+	s := setupHarness()
 	defer s.Cleanup()
 
 	s.GivenAppExists(t, &models.App{Name: s.AppName})
@@ -212,7 +212,7 @@ func TestCanCauseTimeout(t *testing.T) {
 
 	u := url.URL{
 		Scheme: "http",
-		Host:   Host(),
+		Host:   host(),
 	}
 	u.Path = path.Join(u.Path, "r", s.AppName, rt.Path)
 
@@ -222,7 +222,7 @@ func TestCanCauseTimeout(t *testing.T) {
 	}{Seconds: 11})
 	output := &bytes.Buffer{}
 
-	resp, _ := CallFN(s.Context, u.String(), content, output, "POST", []string{})
+	resp, _ := callFN(s.Context, u.String(), content, output, "POST", []string{})
 
 	if !strings.Contains(output.String(), "Timed out") {
 		t.Errorf("Must fail because of timeout, but got error message: %v", output.String())
@@ -234,7 +234,7 @@ func TestCanCauseTimeout(t *testing.T) {
 	}
 	cfg.WithTimeout(time.Second * 60)
 
-	retryErr := APICallWithRetry(t, 10, time.Second*2, func() (err error) {
+	retryErr := apiCallWithRetry(t, 10, time.Second*2, func() (err error) {
 		_, err = s.Client.Call.GetAppsAppCallsCall(cfg)
 		return err
 	})
@@ -255,7 +255,7 @@ func TestCanCauseTimeout(t *testing.T) {
 
 func TestCallResponseHeadersMatch(t *testing.T) {
 	t.Parallel()
-	s := SetupHarness()
+	s := setupHarness()
 	defer s.Cleanup()
 
 	s.GivenAppExists(t, &models.App{Name: s.AppName})
@@ -266,12 +266,12 @@ func TestCallResponseHeadersMatch(t *testing.T) {
 
 	u := url.URL{
 		Scheme: "http",
-		Host:   Host(),
+		Host:   host(),
 	}
 	u.Path = path.Join(u.Path, "r", s.AppName, rt.Path)
 	content := &bytes.Buffer{}
 	output := &bytes.Buffer{}
-	CallFN(s.Context, u.String(), content, output, "POST",
+	callFN(s.Context, u.String(), content, output, "POST",
 		[]string{
 			"ACCEPT: application/xml",
 			"ACCEPT: application/json; q=0.2",
@@ -285,7 +285,7 @@ func TestCallResponseHeadersMatch(t *testing.T) {
 
 func TestCanWriteLogs(t *testing.T) {
 	t.Parallel()
-	s := SetupHarness()
+	s := setupHarness()
 	defer s.Cleanup()
 
 	rt := s.BasicRoute()
@@ -298,7 +298,7 @@ func TestCanWriteLogs(t *testing.T) {
 
 	u := url.URL{
 		Scheme: "http",
-		Host:   Host(),
+		Host:   host(),
 	}
 	u.Path = path.Join(u.Path, "r", s.AppName, rt.Path)
 	content := &bytes.Buffer{}
@@ -306,7 +306,7 @@ func TestCanWriteLogs(t *testing.T) {
 		Size int
 	}{Size: 20})
 
-	callID := CallSync(t, s.Context, u, content)
+	callID := callSync(s.Context, t, u, content)
 
 	cfg := &operations.GetAppsAppCallsCallLogParams{
 		Call:    callID,
@@ -315,7 +315,7 @@ func TestCanWriteLogs(t *testing.T) {
 	}
 
 	// TODO this test is redundant we have 3 tests for this?
-	retryErr := APICallWithRetry(t, 10, time.Second*2, func() (err error) {
+	retryErr := apiCallWithRetry(t, 10, time.Second*2, func() (err error) {
 		_, err = s.Client.Operations.GetAppsAppCallsCallLog(cfg)
 		return err
 	})
@@ -332,7 +332,7 @@ func TestCanWriteLogs(t *testing.T) {
 
 func TestOversizedLog(t *testing.T) {
 	t.Parallel()
-	s := SetupHarness()
+	s := setupHarness()
 	defer s.Cleanup()
 
 	rt := s.BasicRoute()
@@ -346,7 +346,7 @@ func TestOversizedLog(t *testing.T) {
 	size := 1 * 1024 * 1024 * 1024
 	u := url.URL{
 		Scheme: "http",
-		Host:   Host(),
+		Host:   host(),
 	}
 	u.Path = path.Join(u.Path, "r", s.AppName, rt.Path)
 	content := &bytes.Buffer{}
@@ -354,7 +354,7 @@ func TestOversizedLog(t *testing.T) {
 		Size int
 	}{Size: size}) //exceeding log by 1 symbol
 
-	callID := CallSync(t, s.Context, u, content)
+	callID := callSync(s.Context, t, u, content)
 
 	cfg := &operations.GetAppsAppCallsCallLogParams{
 		Call:    callID,
@@ -362,7 +362,7 @@ func TestOversizedLog(t *testing.T) {
 		Context: s.Context,
 	}
 
-	retryErr := APICallWithRetry(t, 10, time.Second*2, func() (err error) {
+	retryErr := apiCallWithRetry(t, 10, time.Second*2, func() (err error) {
 		_, err = s.Client.Operations.GetAppsAppCallsCallLog(cfg)
 		return err
 	})
