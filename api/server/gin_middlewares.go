@@ -145,16 +145,46 @@ func loggerWrap(c *gin.Context) {
 
 	if appName := c.Param(api.CApp); appName != "" {
 		c.Set(api.App, appName)
-		ctx = context.WithValue(ctx, api.App, appName)
+		ctx = ContextWithApp(ctx, appName)
 	}
 
 	if routePath := c.Param(api.CRoute); routePath != "" {
 		c.Set(api.Path, routePath)
-		ctx = context.WithValue(ctx, api.Path, routePath)
+		ctx = ContextWithPath(ctx, routePath)
 	}
 
 	c.Request = c.Request.WithContext(ctx)
 	c.Next()
+}
+
+type pathKey string
+
+// ContextWithPath sets the routePath value on a context, it may be retrieved
+// using PathFromContext.
+// TODO this is also used as a gin.Key -- stop one of these two things.
+func ContextWithPath(ctx context.Context, routePath string) context.Context {
+	return context.WithValue(ctx, pathKey(api.Path), routePath)
+}
+
+// PathFromContext returns the path from a context, if set.
+func PathFromContext(ctx context.Context) string {
+	r, _ := ctx.Value(pathKey(api.Path)).(string)
+	return r
+}
+
+type appKey string
+
+// ContextWithApp sets the app name value on a context, it may be retrieved
+// using AppFromContext.
+// TODO this is also used as a gin.Key -- stop one of these two things.
+func ContextWithApp(ctx context.Context, app string) context.Context {
+	return context.WithValue(ctx, appKey(api.App), app)
+}
+
+// AppFromContext returns the app from a context, if set.
+func AppFromContext(ctx context.Context) string {
+	r, _ := ctx.Value(appKey(api.App)).(string)
+	return r
 }
 
 func (s *Server) checkAppPresenceByNameAtRunner() gin.HandlerFunc {

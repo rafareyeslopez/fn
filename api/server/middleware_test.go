@@ -93,9 +93,8 @@ func TestRootMiddleware(t *testing.T) {
 			if r.Header.Get("funcit") != "" {
 				t.Log("breaker breaker!")
 				ctx := r.Context()
-				// TODO: this is a little dicey, should have some functions to set these in case the context keys change or something.
-				ctx = context.WithValue(ctx, "app", "myapp2")
-				ctx = context.WithValue(ctx, "path", "/app2func")
+				ctx = ContextWithApp(ctx, "myapp2")
+				ctx = ContextWithPath(ctx, "/app2func")
 				mctx := fnext.GetMiddlewareController(ctx)
 				mctx.CallFunction(w, r.WithContext(ctx))
 				return

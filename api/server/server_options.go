@@ -8,16 +8,19 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type ServerOption func(context.Context, *Server) error
+// Option is a func that allows configuring a Server
+type Option func(context.Context, *Server) error
 
-func EnableShutdownEndpoint(ctx context.Context, halt context.CancelFunc) ServerOption {
+// EnableShutdownEndpoint adds /shutdown to initiate a shutdown of an fn server.
+func EnableShutdownEndpoint(ctx context.Context, halt context.CancelFunc) Option {
 	return func(ctx context.Context, s *Server) error {
 		s.Router.GET("/shutdown", s.handleShutdown(halt))
 		return nil
 	}
 }
 
-func LimitRequestBody(max int64) ServerOption {
+// LimitRequestBody wraps every http request to limit its size to the specified max bytes.
+func LimitRequestBody(max int64) Option {
 	return func(ctx context.Context, s *Server) error {
 		s.Router.Use(limitRequestBody(max))
 		return nil
